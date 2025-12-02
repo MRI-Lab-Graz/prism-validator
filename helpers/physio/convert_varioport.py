@@ -139,7 +139,16 @@ def convert_varioport(raw_path, output_path, sidecar_path, task_name="rest"):
         # Identify active channels
         # In the test file, EKG has len=-1 (0xFFFFFFFF), others have 0.
         # We assume only channels with len != 0 are active.
-        active_channels = [c for c in channels if c["chlen"] != 0]
+        # BUT: Marker channel often has len=0 but is present in Type 7 streams (checking file size divisibility).
+        active_channels = []
+        for c in channels:
+            if c["chlen"] != 0:
+                active_channels.append(c)
+            elif "marker" in c["name"].lower():
+                # Force include marker if it looks like it might be in the stream
+                # We'll verify block alignment later
+                print(f"Force-including channel {c['name']} despite len=0")
+                active_channels.append(c)
 
         if not active_channels:
             print(
@@ -159,16 +168,12 @@ def convert_varioport(raw_path, output_path, sidecar_path, task_name="rest"):
         fs_set = set(c["fs"] for c in active_channels)
         if len(fs_set) > 1:
             print(
-                f"Warning: Multiple sampling rates detected: {fs_set}. This script currently only supports combining channels with the same sampling rate."
+                f"Warning: Multiple sampling rates detected: {fs_set}. Assuming interleaved data follows the highest rate (or first channel)."
             )
-            # Filter to keep only the first channel's fs group
-            target_fs = active_channels[0]["fs"]
-            active_channels = [c for c in active_channels if c["fs"] == target_fs]
-            print(
-                f"Restricted to channels with fs={target_fs:.2f}Hz: {[c['name'] for c in active_channels]}"
-            )
-
-        target_fs = active_channels[0]["fs"]
+            # We do NOT filter channels here anymore, we assume they are all in the stream.
+            # We use the maximum FS for the sidecar and upsampling target.
+            
+        target_fs = max(c["fs"] for c in active_channels)
         channel_data = {}
 
         if hdrtype == 6:
@@ -311,10 +316,59 @@ def convert_varioport(raw_path, output_path, sidecar_path, task_name="rest"):
                     data_array = (data_array - doffs) * mul / div
                     channel_data[name] = data_array
                 else:
-                    print(
-                        "Error: Type 7 with multiple channels not fully implemented yet. Skipping."
-                    )
-                    break
+                    # Multiple channels, interleaved
+                    print(f"Reading {len(active_channels)} interleaved channels using numpy...")
+                    dtype_list = []
+                    for c in active_channels:
+                        # dsize=2 -> >u2, dsize=1 -> >u1
+                        if c["dsize"] == 2:
+                            fmt = '>u2'
+                        elif c["dsize"] == 1:
+                            fmt = '>u1'
+                        else:
+                            print(f"Unsupported dsize {c['dsize']} for channel {c['name']}")
+                            return
+                        # Sanitize name for numpy field
+                        safe_name = c["name"].replace(" ", "_").replace("(", "").replace(")", "")
+                        dtype_list.append((safe_name, fmt))
+                    
+                    dt = np.dtype(dtype_list)
+                    
+                    # Read data
+                    # Ensure we only read complete blocks
+                    valid_bytes = num_blocks * block_size
+                    try:
+                        raw_data = np.frombuffer(raw_bytes[:valid_bytes], dtype=dt)
+                    except Exception as e:
+                        print(f"Error reading buffer: {e}")
+                        return
+
+                    # Process each channel
+                    for i, c in enumerate(active_channels):
+                        name = c["name"]
+                        safe_name = dtype_list[i][0]
+                        raw_vals = raw_data[safe_name]
+                        
+                        # Scaling
+                        doffs = c["doffs"]
+                        mul = c["mul"]
+                        div = c["div"]
+                        
+                        if mul == 0 or div == 0:
+                            defaults = get_default_scaling(name)
+                            if defaults:
+                                doffs = defaults["doffs"]
+                                mul = defaults["mul"]
+                                div = defaults["div"]
+                            else:
+                                doffs = 0
+                                mul = 1
+                                div = 1
+                        if div == 0: div = 1
+                        
+                        data_array = raw_vals.astype(float)
+                        data_array = (data_array - doffs) * mul / div
+                        channel_data[name] = data_array
 
         # Create DataFrame
         if not channel_data:
@@ -323,13 +377,26 @@ def convert_varioport(raw_path, output_path, sidecar_path, task_name="rest"):
 
         # Check lengths
         lengths = [len(d) for d in channel_data.values()]
-        min_len = min(lengths)
+        max_len = max(lengths)
+        
         if len(set(lengths)) > 1:
-            print(
-                f"Warning: Channel lengths differ: {lengths}. Truncating to minimum {min_len}."
-            )
+            print(f"Warning: Channel lengths differ: {lengths}. Upsampling to maximum {max_len}.")
+            
             for k in channel_data:
-                channel_data[k] = channel_data[k][:min_len]
+                current_len = len(channel_data[k])
+                if current_len < max_len:
+                    print(f"  Upsampling {k} from {current_len} to {max_len}...")
+                    
+                    old_indices = np.linspace(0, 1, current_len)
+                    new_indices = np.linspace(0, 1, max_len)
+                    
+                    # If it's a marker channel, use nearest neighbor (step) to preserve integer codes
+                    if "marker" in k.lower() or "trg" in k.lower():
+                         indices = np.round((new_indices) * (current_len - 1)).astype(int)
+                         channel_data[k] = channel_data[k][indices]
+                    else:
+                        # Linear interpolation for continuous signals
+                        channel_data[k] = np.interp(new_indices, old_indices, channel_data[k])
 
         df = pd.DataFrame(channel_data)
 

@@ -285,7 +285,6 @@ See [`docs/NEUROBAGEL_INTEGRATION_STRATEGY.md`](docs/NEUROBAGEL_INTEGRATION_STRA
 Prism-Validator now includes a complete workflow for integrating LimeSurvey questionnaires into the BIDS/PRISM structure.
 
 ### Features:
-- **Survey Library**: Organize reusable questionnaire templates ("Golden Masters")
 - **Automated Conversion**:
   - `LimeSurvey (.lss) -> PRISM JSON`: Create sidecars from survey structures
   - `PRISM JSON -> LimeSurvey (.lss)`: Generate importable surveys from sidecars
@@ -298,6 +297,23 @@ Prism-Validator now includes a complete workflow for integrating LimeSurvey ques
 2. **Convert**: Run `helpers/surveys/limesurvey_to_prism.py` to generate the JSON sidecar.
 3. **Collect**: Run study, export data to TSV.
 4. **Combine**: Use `helpers/surveys/combine_survey_json.py` to merge multiple sidecars for the final dataset.
+
+## 📚 Survey Library (New)
+
+A robust management system for questionnaire templates ("Golden Masters") with a **Draft & Publish** workflow.
+
+### Key Features:
+- **Read-Only Masters**: Prevents accidental overwrites of production files.
+- **Draft Mode**: Checkout files to `drafts/` for safe editing.
+- **Automated Validation**: Submissions are checked for variable name conflicts across the entire library.
+- **Merge Requests**: Validated drafts are submitted to `merge_requests/` for final review.
+- **GUI Editor**: User-friendly web interface for editing questions, ranges, and metadata.
+
+See [`docs/SURVEY_LIBRARY.md`](docs/SURVEY_LIBRARY.md) for the full guide.
+
+---
+
+## 📊 LimeSurvey Integration
 5. **Redact (optional)**: Run `helpers/utils/redact_sidecar.py` to produce a public-safe copy of the sidecar if the instrument text is licensed.
 
 See [`docs/LIMESURVEY_INTEGRATION.md`](docs/LIMESURVEY_INTEGRATION.md) for the full guide.
