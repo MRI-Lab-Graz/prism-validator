@@ -12,19 +12,32 @@ compatible with the Prism-Validator survey schema.
 import sys
 import os
 import json
+import zipfile
 import xml.etree.ElementTree as ET
 from datetime import date
 
 
 def parse_limesurvey_structure(lss_path):
     """
-    Parse LimeSurvey .lss (XML) file and extract question metadata.
+    Parse LimeSurvey .lss (XML) file or .lsa (Archive) and extract question metadata.
     """
     try:
-        tree = ET.parse(lss_path)
+        if lss_path.endswith('.lsa'):
+            with zipfile.ZipFile(lss_path, 'r') as z:
+                # Find the .lss file inside the archive
+                lss_files = [f for f in z.namelist() if f.endswith('.lss')]
+                if not lss_files:
+                    print("Error: No .lss file found in the .lsa archive.")
+                    sys.exit(1)
+                # Use the first .lss file found
+                with z.open(lss_files[0]) as f:
+                    tree = ET.parse(f)
+        else:
+            tree = ET.parse(lss_path)
+            
         root = tree.getroot()
-    except ET.ParseError as e:
-        print(f"Error parsing XML: {e}")
+    except (ET.ParseError, zipfile.BadZipFile) as e:
+        print(f"Error parsing file: {e}")
         sys.exit(1)
 
     # LimeSurvey XML structure usually has sections for questions, subquestions, answers
@@ -138,7 +151,7 @@ def generate_prism_json(questions, output_path):
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(
-            "Usage: python limesurvey_to_prism.py <limesurvey_structure.lss> [output_filename.json]"
+            "Usage: python limesurvey_to_prism.py <limesurvey_structure.lss/.lsa> [output_filename.json]"
         )
         sys.exit(1)
 

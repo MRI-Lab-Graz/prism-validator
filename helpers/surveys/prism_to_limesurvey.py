@@ -13,6 +13,8 @@ import sys
 import os
 import json
 import argparse
+import zipfile
+import io
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
@@ -315,13 +317,28 @@ def json_to_lss(json_path, output_path, matrix_mode=False):
     if hasattr(ET, "indent"):
         ET.indent(tree, space="  ", level=0)
 
-    tree.write(output_path, encoding="UTF-8", xml_declaration=True)
-    print(f"Successfully created {output_path}")
+    if output_path.endswith('.lsa'):
+        # Create LSA archive (Zip file containing .lss)
+        # We need to write the XML to a buffer first
+        xml_buffer = io.BytesIO()
+        tree.write(xml_buffer, encoding="UTF-8", xml_declaration=True)
+        xml_content = xml_buffer.getvalue()
+        
+        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as z:
+            # The .lss file inside the archive usually has the same name as the archive or 'survey_archive.lss'
+            lss_filename = os.path.basename(output_path).replace('.lsa', '.lss')
+            z.writestr(lss_filename, xml_content)
+            
+        print(f"Successfully created LSA archive {output_path}")
+    else:
+        # Standard LSS file
+        tree.write(output_path, encoding="UTF-8", xml_declaration=True)
+        print(f"Successfully created {output_path}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Convert Prism/BIDS JSON sidecar to LimeSurvey Structure File (.lss)."
+        description="Convert Prism/BIDS JSON sidecar to LimeSurvey Structure File (.lss) or Archive (.lsa)."
     )
     parser.add_argument("input_json", help="Path to the input JSON sidecar file")
     parser.add_argument(

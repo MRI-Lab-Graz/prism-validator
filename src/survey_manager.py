@@ -15,9 +15,9 @@ class SurveyManager:
         self.lib_path = Path(library_path)
         self.validator = LibraryValidator(self.lib_path)
         self.drafts_path = self.lib_path / "drafts"
-        self.drafts_path.mkdir(exist_ok=True)
+        self.drafts_path.mkdir(parents=True, exist_ok=True)
         self.requests_path = self.lib_path / "merge_requests"
-        self.requests_path.mkdir(exist_ok=True)
+        self.requests_path.mkdir(parents=True, exist_ok=True)
 
     def list_surveys(self):
         """

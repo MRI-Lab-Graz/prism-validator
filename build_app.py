@@ -83,7 +83,7 @@ args = [
     'prism-validator-web.py',
     '--name=PrismValidator',
     '--windowed',  # No console window
-    '--onedir',    # Directory based
+    '--onefile',   # Single executable file
     '--clean',
     '--noconfirm',
     # Explicitly include hidden imports that PyInstaller might miss
