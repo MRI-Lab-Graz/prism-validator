@@ -36,7 +36,7 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        python build_app.py
+        python scripts/build/build_app.py
 
     - name: Zip macOS App
       if: runner.os == 'macOS'

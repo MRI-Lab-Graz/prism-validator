@@ -16,7 +16,7 @@ Open your terminal and run:
 ```bash
 git clone https://github.com/MRI-Lab-Graz/prism-validator.git
 cd prism-validator
-bash setup.sh
+bash scripts/setup/setup.sh
 ```
 
 ### Windows
@@ -26,7 +26,7 @@ Open Command Prompt or PowerShell and run:
 ```cmd
 git clone https://github.com/MRI-Lab-Graz/prism-validator.git
 cd prism-validator
-scripts\setup-windows.bat
+scripts\setup\setup-windows.bat
 ```
 
 This will:

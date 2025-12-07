@@ -68,7 +68,7 @@ if (-not (Test-Path "survey_library")) {
 
 # 6. Build the application
 Write-Host "[5/5] Building Windows application..." -ForegroundColor Yellow
-python build_app.py
+python scripts/build/build_app.py
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Build failed." -ForegroundColor Red
     exit 1

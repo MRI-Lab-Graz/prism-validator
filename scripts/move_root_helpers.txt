@@ -1,0 +1,10 @@
+This project historically had several ad-hoc helper scripts in the repository root.
+
+From now on, only these entry points should live in the root directory:
+
+- `prism-validator.py`  (main validator CLI / web backend)
+- `prism_tools.py`      (CLI hub for helpers and converters)
+
+All other helper scripts belong under `scripts/` (or `helpers/` if they are imported modules).
+
+When adding new CLI-style tools, prefer wiring them into `prism_tools.py` instead of adding new top-level scripts.

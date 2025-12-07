@@ -7,7 +7,7 @@
 **👉 Run the web interface** (recommended for all users):
 
 ```bash
-bash setup.sh              # One-time setup (macOS/Linux)
+bash scripts/setup/setup.sh    # One-time setup (macOS/Linux)
 python prism-validator-web.py
 ```
 
@@ -44,10 +44,10 @@ Prism-Validator is a **BIDS Extension** framework and validation tool designed t
 - **Cross-platform** - Works on Windows, macOS, and Linux
 - **Responsive design** - Works on desktop and mobile browsers
 
-### 🛠️ Survey Data Import Workflow
+## 🛠️ Survey Data Import Workflow
 A complete toolset for converting external survey data (CSV/Excel) into PRISM-compliant datasets:
-1.  **Excel to Library**: Convert data dictionaries into a "Golden Master" JSON library (`scripts/excel_to_library.py`).
-2.  **Library Validation**: Ensure variable uniqueness and generate catalogs (`scripts/check_survey_library.py`).
+1.  **Excel to Library**: Convert data dictionaries into a "Golden Master" JSON library (via `prism_tools.py survey import-excel`).
+2.  **Library Validation**: Ensure variable uniqueness and generate catalogs (via `prism_tools.py survey validate`).
 
 ## 🔌 Prism Tools (CLI)
 
@@ -322,7 +322,7 @@ The included `test_dataset/` demonstrates:
 
 ### Additional Files
 - `prism-validator.py` - Command-line tool (see footnote below)
-- `setup.sh` / `setup-windows.bat` - Installation scripts
+- `scripts/setup/setup.sh` / `scripts/setup/setup-windows.bat` - Installation scripts
 - `requirements.txt` - Python dependencies
 
 ## 🔬 NeuroBagel Integration (v1.1.0+)
@@ -413,7 +413,7 @@ See [`docs/LIMESURVEY_INTEGRATION.md`](docs/LIMESURVEY_INTEGRATION.md) for the f
 ```bash
 git clone https://github.com/MRI-Lab-Graz/prism-validator.git
 cd prism-validator
-bash setup.sh
+bash scripts/setup/setup.sh
 python prism-validator-web.py
 ```
 
@@ -421,7 +421,7 @@ python prism-validator-web.py
 ```cmd
 git clone https://github.com/MRI-Lab-Graz/prism-validator.git
 cd prism-validator
-scripts\setup-windows.bat
+scripts\setup\setup-windows.bat
 python prism-validator-web.py
 ```
 

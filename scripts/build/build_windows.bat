@@ -62,7 +62,7 @@ if not exist survey_library (
 
 REM 6. Build the application
 echo [5/5] Building Windows application...
-python build_app.py
+python scripts\build\build_app.py
 if %errorlevel% neq 0 (
     echo ERROR: Build failed.
     exit /b 1

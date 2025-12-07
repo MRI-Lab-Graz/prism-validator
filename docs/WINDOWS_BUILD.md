@@ -57,7 +57,7 @@ If the automated scripts don't work, follow these steps:
 
 5. **Build the application:**
    ```batch
-   python build_app.py
+   python scripts\build\build_app.py
    ```
 
 ## Output
@@ -85,7 +85,7 @@ You can:
 ### "PyInstaller build fails"
 - Make sure all dependencies are installed: `pip install -r requirements-build.txt`
 - Check if antivirus software is blocking PyInstaller
-- Try running with `--debug` flag: `python build_app.py --debug`
+- Try running with `--debug` flag: `python scripts\\build\\build_app.py --debug`
 
 ### Missing icon
 - The build script will automatically use the PNG logo from `static/img/MRI_Lab_Logo.png`
