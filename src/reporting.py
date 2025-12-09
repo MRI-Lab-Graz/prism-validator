@@ -112,12 +112,7 @@ def print_dataset_summary(dataset_path, stats):
     else:
         print("  No biometrics detected")
 
-    # File statistics
-    data_files = stats.total_files - stats.sidecar_files
-    print("\n📄 FILES:")
-    print(f"  • Data files: {data_files}")
-    print(f"  • Sidecar files: {stats.sidecar_files}")
-    print(f"  • Total files: {stats.total_files}")
+    # File statistics intentionally omitted (counts often exclude inherited sidecars and can be misleading)
 
 
 def print_validation_results(problems):

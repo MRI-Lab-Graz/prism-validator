@@ -225,11 +225,21 @@ def convert_lsa_to_dataset(
     """Convert .lsa responses into a PRISM/BIDS dataset (tsv + json) using survey_library schemas."""
     base_priority = ["participant_id", "id", "code", "token", "subject"]
     if id_column:
-        id_priority = [id_column] + base_priority
+        # Fail fast if the requested ID column is missing; do not silently fall back.
+        df_preview, _ = parse_lsa_responses(lsa_path)
+        match = next((c for c in df_preview.columns if c.lower() == id_column.lower()), None)
+        if not match:
+            available = ", ".join(df_preview.columns)
+            raise ValueError(
+                f"ID column '{id_column}' not found in LimeSurvey responses. Available columns: {available}"
+            )
+        # Ensure we still process the full dataframe below without re-reading from disk.
+        df = df_preview
+        id_priority = [match] + base_priority
     else:
+        df, _ = parse_lsa_responses(lsa_path)
         id_priority = id_priority or base_priority
 
-    df, _ = parse_lsa_responses(lsa_path)
     # Pick participant id column
     id_col = None
     for cand in id_priority:

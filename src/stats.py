@@ -138,14 +138,22 @@ class DatasetStats:
         for data in subjects_with_sessions.values():
             all_sessions.update(data["sessions"])
 
-        # Check if all subjects have all sessions
+        # Aggregate missing sessions across subjects to reduce noise
+        missing_by_session = {}
+
         for subject_id, data in subjects_with_sessions.items():
             missing_sessions = all_sessions - data["sessions"]
-            if missing_sessions:
-                for session in missing_sessions:
-                    warnings.append(
-                        ("WARNING", f"Subject {subject_id} missing session {session}")
-                    )
+            for session in missing_sessions:
+                missing_by_session.setdefault(session, []).append(subject_id)
+
+        for session in sorted(missing_by_session.keys()):
+            subjects = sorted(missing_by_session[session])
+            warnings.append(
+                (
+                    "WARNING",
+                    f"Session {session} missing for subjects: {', '.join(subjects)}",
+                )
+            )
 
         return warnings
 
