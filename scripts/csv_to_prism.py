@@ -36,15 +36,45 @@ IGNORE_PARTICIPANT_COLS = {
 }
 
 
-def _ensure_participants(df, id_col, output_root, library_path, candidates=None):
-    """Create participants.tsv/json. Prefer library participants.json; otherwise infer from candidate columns."""
+def _allowed_values(col_def):
+    """Return allowed values for a column, expanding numeric level endpoints to full range."""
+    if not isinstance(col_def, dict):
+        return None
+
+    if "AllowedValues" in col_def:
+        return [str(x) for x in col_def["AllowedValues"]]
+
+    if "Levels" in col_def:
+        level_keys = list(col_def["Levels"].keys())
+        try:
+            numeric_levels = [int(float(k)) for k in level_keys]
+        except ValueError:
+            numeric_levels = []
+
+        if numeric_levels:
+            min_level = min(numeric_levels)
+            max_level = max(numeric_levels)
+            full_range = [str(i) for i in range(min_level, max_level + 1)]
+            if set(full_range).issuperset(set(level_keys)):
+                return full_range
+        return level_keys
+
+    return None
+
+
+def _ensure_participants(df, id_col, output_root, library_path, candidates=None, participant_schema=None):
+    """Create participants.tsv/json. Prefer explicit participant schema or library participants.json; otherwise infer."""
     rawdata_dir = os.path.join(output_root, "rawdata")
     os.makedirs(rawdata_dir, exist_ok=True)
 
     participants_json_path = os.path.join(library_path, "participants.json")
     inferred = False
+    used_schema = False
 
-    if not os.path.exists(participants_json_path):
+    if participant_schema:
+        part_schema = participant_schema
+        used_schema = True
+    elif not os.path.exists(participants_json_path):
         # Build a minimal schema from candidates
         cols = candidates or []
         cols = [c for c in cols if c != id_col]
@@ -62,7 +92,7 @@ def _ensure_participants(df, id_col, output_root, library_path, candidates=None)
         with open(participants_json_path, "r") as f:
             part_schema = json.load(f)
 
-    print("Found participants.json, generating participants.tsv...")
+    print("Generating participants.tsv using participant schema..." if (used_schema or not inferred) else "Generating inferred participants.tsv...")
     try:
         part_vars = [k for k in part_schema.keys() if k not in ["Technical", "Study", "Metadata"]]
         found_part_vars = [v for v in part_vars if v in df.columns]
@@ -73,6 +103,15 @@ def _ensure_participants(df, id_col, output_root, library_path, candidates=None)
             df_part["participant_id"] = df_part["participant_id"].apply(
                 lambda x: f"sub-{x}" if not str(x).startswith("sub-") else str(x)
             )
+
+            # Clean values against allowed values; fallback to 'n/a' when out of range/enum
+            for col in found_part_vars:
+                col_def = part_schema.get(col, {})
+                allowed = _allowed_values(col_def)
+                if allowed:
+                    df_part[col] = df_part[col].apply(
+                        lambda v: v if pd.isna(v) or str(v) in allowed else "n/a"
+                    )
 
             part_tsv_path = os.path.join(rawdata_dir, "participants.tsv")
             df_part.to_csv(part_tsv_path, sep="\t", index=False)
@@ -142,11 +181,23 @@ def process_dataframe(df, schemas, output_root, library_path, session_override=N
             continue
         candidate_participant_cols.append(col)
 
-    _ensure_participants(df, id_col, output_root, library_path, candidates=candidate_participant_cols)
+    _ensure_participants(
+        df,
+        id_col,
+        output_root,
+        library_path,
+        candidates=candidate_participant_cols,
+        participant_schema=schemas.get("participant"),
+    )
 
     # Iterate over each defined survey schema
     for task_name, schema in schemas.items():
         print(f"Processing survey: {task_name}...")
+
+        # Skip per-subject participant task files; participants handled at dataset root.
+        if task_name == "participant":
+            print("  - Skipping per-subject participants; handled via participants.tsv/json at dataset root.")
+            continue
 
         # 1. Identify variables belonging to this survey
         # Exclude standard metadata sections
@@ -231,9 +282,19 @@ def process_dataframe(df, schemas, output_root, library_path, session_override=N
 
                 # Ensure columns follow canonical order
                 ordered_keys = [k for k in canonical_order if k in merged]
-                clean_data = {
-                    k: (merged[k] if pd.notna(merged[k]) else "n/a") for k in ordered_keys
-                }
+                clean_data = {}
+                for k in ordered_keys:
+                    val = merged[k]
+                    if pd.isna(val):
+                        clean_data[k] = "n/a"
+                        continue
+
+                    col_def = schema.get(k, {})
+                    allowed = _allowed_values(col_def)
+                    if allowed and str(val) not in allowed:
+                        clean_data[k] = "n/a"
+                    else:
+                        clean_data[k] = val
 
                 df_task = pd.DataFrame([clean_data])
 
