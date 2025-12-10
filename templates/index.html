@@ -68,6 +68,27 @@
                                 Select the schema version to use for validation. "stable" is recommended.
                             </small>
                         </div>
+
+                        <!-- BIDS Validation Options -->
+                        <div class="mb-3 p-3 border rounded bg-light">
+                            <h6 class="mb-2"><i class="fas fa-cubes me-2"></i>BIDS Validation Options</h6>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="run_bids" name="run_bids" value="true">
+                                <label class="form-check-label" for="run_bids">
+                                    Run Standard BIDS Validator
+                                </label>
+                            </div>
+                            <div class="form-check form-switch ms-4" id="bids_warnings_container" style="display: none;">
+                                <input class="form-check-input" type="checkbox" id="bids_warnings" name="bids_warnings" value="true">
+                                <label class="form-check-label" for="bids_warnings">
+                                    Show BIDS Warnings (can be verbose)
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Runs the official BIDS validator alongside PRISM validation.
+                            </small>
+                        </div>
                         
                         <div class="upload-area" id="uploadArea">
                             <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
@@ -127,6 +148,23 @@
                                             </option>
                                             {% endfor %}
                                         </select>
+                                    </div>
+
+                                    <!-- BIDS Validation Options for Local Folder -->
+                                    <div class="mb-3 p-3 border rounded bg-light">
+                                        <h6 class="mb-2"><i class="fas fa-cubes me-2"></i>BIDS Validation Options</h6>
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" id="folder_run_bids" name="run_bids" value="true">
+                                            <label class="form-check-label" for="folder_run_bids">
+                                                Run Standard BIDS Validator
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-switch ms-4" id="folder_bids_warnings_container" style="display: none;">
+                                            <input class="form-check-input" type="checkbox" id="folder_bids_warnings" name="bids_warnings" value="true">
+                                            <label class="form-check-label" for="folder_bids_warnings">
+                                                Show BIDS Warnings (can be verbose)
+                                            </label>
+                                        </div>
                                     </div>
                                     
                                     <div class="input-group input-group-lg">
@@ -271,6 +309,23 @@
 <script>
 // File upload handling
 document.addEventListener('DOMContentLoaded', function() {
+    // BIDS Validation Toggles
+    const runBids = document.getElementById('run_bids');
+    const bidsWarningsContainer = document.getElementById('bids_warnings_container');
+    if (runBids && bidsWarningsContainer) {
+        runBids.addEventListener('change', function() {
+            bidsWarningsContainer.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
+    const folderRunBids = document.getElementById('folder_run_bids');
+    const folderBidsWarningsContainer = document.getElementById('folder_bids_warnings_container');
+    if (folderRunBids && folderBidsWarningsContainer) {
+        folderRunBids.addEventListener('change', function() {
+            folderBidsWarningsContainer.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
     const uploadArea = document.getElementById('uploadArea');
     const folderInput = document.getElementById('datasetFolder');
     const zipInput = document.getElementById('datasetZip');
@@ -343,8 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
     folderInput.addEventListener('change', function() {
         if (folderInput.files.length > 0) {
             // Filter to metadata files only
-            const metadataExtensions = ['.json', '.tsv', '.csv', '.txt', '.edf', '.bdf'];
-            const skipExtensions = ['.nii', '.gz', '.mp4', '.avi', '.mov', '.png', '.jpg', '.jpeg', '.tiff', '.mat'];
+            const metadataExtensions = ['.json', '.tsv', '.csv', '.txt', '.bvec', '.bval', '.vhdr', '.vmrk'];
+            const skipExtensions = ['.nii', '.gz', '.mp4', '.avi', '.mov', '.png', '.jpg', '.jpeg', '.tiff', '.mat', '.edf', '.bdf', '.set', '.fdt'];
             
             let metadataCount = 0;
             let skippedCount = 0;
@@ -426,8 +481,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Filter files to metadata only
-        const metadataExtensions = ['.json', '.tsv', '.csv', '.txt', '.edf', '.bdf'];
-        const skipExtensions = ['.nii', '.gz', '.mp4', '.avi', '.mov', '.png', '.jpg', '.jpeg', '.tiff', '.mat', '.eeg', '.dat', '.fif'];
+        const metadataExtensions = ['.json', '.tsv', '.csv', '.txt', '.bvec', '.bval', '.vhdr', '.vmrk'];
+        const skipExtensions = ['.nii', '.gz', '.mp4', '.avi', '.mov', '.png', '.jpg', '.jpeg', '.tiff', '.mat', '.eeg', '.dat', '.fif', '.edf', '.bdf', '.set', '.fdt'];
         
     const form = e.target;
     const formData = new FormData();
@@ -466,7 +521,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Send the complete file list so server can create structure
         formData.append('all_files', JSON.stringify(allFilePaths));
-        metadataPaths.forEach(path => formData.append('metadata_paths[]', path));
+        // Send metadata paths as a single JSON string to avoid MAX_FORM_PARTS limits
+        formData.append('metadata_paths_json', JSON.stringify(metadataPaths));
+
+        // Add BIDS options
+        const runBidsCheckbox = document.getElementById('run_bids');
+        const bidsWarningsCheckbox = document.getElementById('bids_warnings');
+        if (runBidsCheckbox && runBidsCheckbox.checked) {
+            formData.append('run_bids', 'true');
+        }
+        if (bidsWarningsCheckbox && bidsWarningsCheckbox.checked) {
+            formData.append('bids_warnings', 'true');
+        }
         
         console.log(`Uploading ${includedCount} metadata files (${(totalSize/1024/1024).toFixed(2)} MB), skipping ${skippedCount} data files`);
         

@@ -72,7 +72,7 @@ class SimpleStats:
 
 
 # Use subprocess to run the main validator script - single source of truth
-def run_main_validator(dataset_path, verbose=False, schema_version=None):
+def run_main_validator(dataset_path, verbose=False, schema_version=None, run_bids=False):
     """
     Run the validation logic.
     Prefer importing core logic directly. Fallback to subprocess if needed.
@@ -83,7 +83,8 @@ def run_main_validator(dataset_path, verbose=False, schema_version=None):
             issues, stats = core_validate_dataset(
                 dataset_path, 
                 verbose=verbose, 
-                schema_version=schema_version
+                schema_version=schema_version,
+                run_bids=run_bids
             )
             
             # Convert issues to web format if needed
@@ -113,6 +114,8 @@ def run_main_validator(dataset_path, verbose=False, schema_version=None):
             cmd.append("--verbose")
         if schema_version:
             cmd.extend(["--schema-version", schema_version])
+        if run_bids:
+            cmd.append("--bids")
 
         result = subprocess.run(
             cmd, capture_output=True, text=True, cwd=os.path.dirname(__file__)
@@ -271,8 +274,9 @@ else:
 
 app.secret_key = "prism-validator-secret-key"  # Change this in production
 app.config["MAX_CONTENT_LENGTH"] = (
-    100 * 1024 * 1024
-)  # 100MB max file size (metadata only)
+    1024 * 1024 * 1024
+)  # 1GB max file size (metadata only)
+app.config["MAX_FORM_PARTS"] = 20000  # Allow up to 20000 files/fields in upload
 
 # Initialize Survey Manager
 survey_library_path = BASE_DIR / "survey_library"
@@ -849,7 +853,15 @@ def upload_dataset():
     # Create temporary directory for processing
     temp_dir = tempfile.mkdtemp(prefix="prism_validator_")
 
-    metadata_paths = request.form.getlist("metadata_paths[]")
+    # Try to get metadata paths from JSON first (new method), fall back to list (old method)
+    metadata_paths_json = request.form.get("metadata_paths_json")
+    if metadata_paths_json:
+        try:
+            metadata_paths = json.loads(metadata_paths_json)
+        except json.JSONDecodeError:
+            metadata_paths = []
+    else:
+        metadata_paths = request.form.getlist("metadata_paths[]")
 
     try:
         # Check if this is a folder upload (multiple files) or ZIP upload (single file)
@@ -892,15 +904,30 @@ def upload_dataset():
             if len(files) != len(filtered_files):
                 print(f"   (+ {len(files) - len(filtered_files)} system files ignored)")
             break
+        # Get BIDS options
+        run_bids = request.form.get("run_bids") == "true"
+        show_bids_warnings = request.form.get("bids_warnings") == "true"
+
         # Validate the dataset using core validator when available
         if callable(core_validate_dataset):
             issues, dataset_stats = core_validate_dataset(
-                dataset_path, verbose=True, schema_version=schema_version
+                dataset_path, 
+                verbose=True, 
+                schema_version=schema_version,
+                run_bids=run_bids
             )
         else:
             issues, dataset_stats = run_main_validator(
-                dataset_path, verbose=True, schema_version=schema_version
+                dataset_path, 
+                verbose=True, 
+                schema_version=schema_version,
+                run_bids=run_bids
             )
+
+        # Filter BIDS warnings if requested
+        if not show_bids_warnings:
+            issues = [i for i in issues if not (i[0] == "WARNING" and "[BIDS]" in i[1])]
+
         results = format_validation_results(issues, dataset_stats, dataset_path)
 
         # Add timestamp, upload type info, and schema version
@@ -989,6 +1016,10 @@ def create_placeholder_content(file_path, extension):
             ".dat": "Binary data file",
             ".fif": "Neuromag/MNE data",
             ".mat": "MATLAB data file",
+            ".edf": "European Data Format (EEG/Physio)",
+            ".bdf": "BioSemi Data Format",
+            ".set": "EEGLAB dataset info",
+            ".fdt": "EEGLAB data file",
         }
 
         file_type = file_type_map.get(extension, f"{extension} data file")
@@ -1292,15 +1323,29 @@ def validate_folder():
             file_count += len([f for f in files if not is_system_file(f)])
         print(f"   Found {file_count} non-system files in directory")
 
+        # Get BIDS options
+        run_bids = request.form.get("run_bids") == "true"
+        show_bids_warnings = request.form.get("bids_warnings") == "true"
+
         # Use the core validator when available for direct integration
         if callable(core_validate_dataset):
             issues, stats = core_validate_dataset(
-                folder_path, verbose=True, schema_version=schema_version
+                folder_path, 
+                verbose=True, 
+                schema_version=schema_version,
+                run_bids=run_bids
             )
         else:
             issues, stats = run_main_validator(
-                folder_path, verbose=True, schema_version=schema_version
+                folder_path, 
+                verbose=True, 
+                schema_version=schema_version,
+                run_bids=run_bids
             )
+
+        # Filter BIDS warnings if requested
+        if not show_bids_warnings:
+            issues = [i for i in issues if not (i[0] == "WARNING" and "[BIDS]" in i[1])]
 
         # Format results for web display
         formatted_results = format_validation_results(issues, stats, folder_path)
