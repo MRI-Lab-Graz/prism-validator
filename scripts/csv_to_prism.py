@@ -96,6 +96,10 @@ def _ensure_participants(df, id_col, output_root, library_path, candidates=None,
     try:
         part_vars = [k for k in part_schema.keys() if k not in ["Technical", "Study", "Metadata"]]
         found_part_vars = [v for v in part_vars if v in df.columns]
+        
+        # Ensure id_col is not in found_part_vars to avoid "cannot insert... already exists" during reset_index
+        if id_col in found_part_vars:
+            found_part_vars.remove(id_col)
 
         if found_part_vars:
             df_part = df.groupby(id_col)[found_part_vars].first().reset_index()

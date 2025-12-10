@@ -279,6 +279,7 @@ def cmd_survey_import_limesurvey_batch(args):
             library_path=args.library,
             task_fallback=args.task,
             id_column=args.subject_id_col,
+            id_map_file=args.id_map,
         )
     except Exception as e:
         print(f"Error importing LimeSurvey: {e}")
@@ -350,6 +351,11 @@ def main():
         "--subject-id-col",
         dest="subject_id_col",
         help="Preferred column name to use for participant ID (e.g., ID, code, token)",
+    )
+    parser_survey_limesurvey_batch.add_argument(
+        "--id-map",
+        dest="id_map",
+        help="Path to TSV/CSV file mapping LimeSurvey IDs to BIDS participant IDs (cols: limesurvey_id, participant_id)",
     )
 
     args = parser.parse_args()
