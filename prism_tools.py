@@ -18,6 +18,69 @@ from scripts.limesurvey_to_prism import convert_lsa_to_prism, batch_convert_lsa
 # We need to import from scripts.excel_to_library
 from scripts.excel_to_library import process_excel
 
+def sanitize_id(id_str):
+    """
+    Sanitizes subject/session IDs by replacing German umlauts and special characters.
+    """
+    if not id_str:
+        return id_str
+    replacements = {
+        'ä': 'ae', 'ö': 'oe', 'ü': 'ue',
+        'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue',
+        'ß': 'ss'
+    }
+    for char, repl in replacements.items():
+        id_str = id_str.replace(char, repl)
+    return id_str
+
+import json
+import hashlib
+
+def get_json_hash(json_path):
+    """Calculates hash of a JSON file's content."""
+    with open(json_path, 'rb') as f:
+        return hashlib.md5(f.read()).hexdigest()
+
+def consolidate_sidecars(output_dir, task, suffix):
+    """
+    Consolidates identical JSON sidecars into a single file in the root directory.
+    """
+    print("\nConsolidating JSON sidecars...")
+    # Find all generated JSONs for this task/suffix
+    # Pattern: sub-*/ses-*/physio/*_task-<task>_<suffix>.json
+    pattern = f"sub-*/ses-*/physio/*_task-{task}_{suffix}.json"
+    json_files = list(output_dir.glob(pattern))
+    
+    if not json_files:
+        print("No sidecars found to consolidate.")
+        return
+
+    first_json = json_files[0]
+    first_hash = get_json_hash(first_json)
+    
+    all_identical = True
+    for jf in json_files[1:]:
+        if get_json_hash(jf) != first_hash:
+            all_identical = False
+            break
+    
+    if all_identical:
+        print(f"All {len(json_files)} sidecars are identical. Consolidating to root.")
+        # Create root sidecar name: task-<task>_<suffix>.json
+        root_json_name = f"task-{task}_{suffix}.json"
+        root_json_path = output_dir / root_json_name
+        
+        # Copy first json to root
+        shutil.copy(first_json, root_json_path)
+        print(f"Created root sidecar: {root_json_path}")
+        
+        # Delete individual sidecars
+        for jf in json_files:
+            jf.unlink()
+        print("Deleted individual sidecars.")
+    else:
+        print("Sidecars differ. Keeping individual files.")
+
 def cmd_convert_physio(args):
     """
     Handles the 'convert physio' command.
@@ -55,7 +118,7 @@ def cmd_convert_physio(args):
         filename = raw_file.name
         
         # Simple parsing logic
-        parts = filename.split('_')
+        parts = raw_file.stem.split('_')
         sub_id = None
         ses_id = None
         
@@ -81,6 +144,10 @@ def cmd_convert_physio(args):
         if not sub_id or not ses_id:
             print(f"Skipping {filename}: Could not determine subject or session ID.")
             continue
+        
+        # Sanitize IDs
+        sub_id = sanitize_id(sub_id)
+        ses_id = sanitize_id(ses_id)
             
         # Construct output path
         # rawdata/sub-XXX/ses-YYY/physio/
@@ -103,11 +170,28 @@ def cmd_convert_physio(args):
                 task_name=args.task,
                 base_freq=args.sampling_rate
             )
+            
+            # Check file size
+            if out_edf.exists():
+                size_kb = out_edf.stat().st_size / 1024
+                if size_kb < 10: # Warn if smaller than 10KB
+                    print(f"⚠️  WARNING: Output file is suspiciously small ({size_kb:.2f} KB): {out_edf}")
+                else:
+                    print(f"✅ Created {out_edf.name} ({size_kb:.2f} KB)")
+            else:
+                 print(f"❌ Error: Output file was not created: {out_edf}")
+                 error_count += 1
+                 continue
+
             success_count += 1
         except Exception as e:
             print(f"Error converting {filename}: {e}")
             error_count += 1
             
+    # Consolidate sidecars if requested (or always?)
+    # BIDS inheritance principle
+    consolidate_sidecars(output_dir, args.task, args.suffix)
+
     print(f"\nConversion finished. Success: {success_count}, Errors: {error_count}")
 
 def cmd_demo_create(args):
