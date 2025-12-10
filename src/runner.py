@@ -85,6 +85,17 @@ def validate_dataset(root_dir, verbose=False, schema_version=None, run_bids=Fals
     consistency_warnings = stats.check_consistency()
     issues.extend(consistency_warnings)
 
+    # If no subjects were discovered, this usually means the user pointed
+    # the validator at the wrong directory (or the dataset is empty).
+    # Treat this as an error so users get a non-zero exit status.
+    if len(stats.subjects) == 0:
+        issues.append(
+            (
+                "ERROR",
+                "No subjects found in dataset. Did you point the validator at the dataset root?",
+            )
+        )
+
     # Run standard BIDS validator if requested
     if run_bids:
         bids_issues = _run_bids_validator(root_dir, verbose)
