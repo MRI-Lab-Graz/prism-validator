@@ -116,20 +116,6 @@ def parse_lsa_timings(lsa_path):
 
 
 
-def parse_lss_xml(xml_content, task_name=None):
-    """Parse a LimeSurvey .lss XML blob into a Prism sidecar dict."""
-    try:
-        root = ET.fromstring(xml_content)
-    except ET.ParseError as e:
-        print(f"Error parsing XML: {e}")
-        return None
-
-    # Helper to find text of a child element
-    def get_text(element, tag):
-        child = element.find(tag)
-        val = child.text if child is not None else ""
-        return val or ""
-
 def _parse_lss_structure(root, get_text):
     # 1. Parse Questions
     # Map qid -> {title, question, type, ...}

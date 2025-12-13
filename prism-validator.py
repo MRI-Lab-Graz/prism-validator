@@ -9,9 +9,9 @@ import os
 import sys
 import argparse
 
-# Check if running inside the venv
+# Check if running inside the venv (skip for frozen/packaged apps)
 venv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv")
-if not sys.prefix.startswith(venv_path):
+if not getattr(sys, "frozen", False) and not sys.prefix.startswith(venv_path):
     print(
         "❌ Error: You are not running inside the prism-validator virtual environment!"
     )

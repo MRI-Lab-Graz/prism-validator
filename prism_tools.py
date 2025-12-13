@@ -6,6 +6,18 @@ import shutil
 from pathlib import Path
 import glob
 
+# Enforce running from the repo-local virtual environment (skip for frozen/packaged apps)
+venv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv")
+if not getattr(sys, "frozen", False) and not sys.prefix.startswith(venv_path):
+    print("❌ Error: You are not running inside the prism-validator virtual environment!")
+    print("   Please activate the venv first:")
+    if os.name == "nt":
+        print(f"     {venv_path}\\Scripts\\activate")
+    else:
+        print(f"     source {venv_path}/bin/activate")
+    print("   Then run this script again.")
+    sys.exit(1)
+
 # Add project root to path to import helpers
 project_root = Path(__file__).resolve().parent
 sys.path.append(str(project_root))
@@ -37,9 +49,16 @@ import json
 import hashlib
 
 def get_json_hash(json_path):
-    """Calculates hash of a JSON file's content."""
-    with open(json_path, 'rb') as f:
-        return hashlib.md5(f.read()).hexdigest()
+    """Calculates hash of a JSON file's semantic content."""
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+        canonical = json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        return hashlib.md5(canonical.encode("utf-8")).hexdigest()
+    except Exception:
+        # Fallback: raw bytes hash
+        with open(json_path, "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()
 
 def consolidate_sidecars(output_dir, task, suffix):
     """

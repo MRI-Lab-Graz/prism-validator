@@ -152,12 +152,5 @@ def validate_schema_version(metadata, schema):
                     f"validator expects v{schema_version}. Consider upgrading metadata.",
                 )
             )
-    else:
-        issues.append(
-            (
-                "INFO",
-                f"No schema version specified in metadata. Using validator default v{schema_version}",
-            )
-        )
 
     return issues

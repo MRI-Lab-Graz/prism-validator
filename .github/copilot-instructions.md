@@ -1,7 +1,7 @@
 # Prism-Validator AI Instructions
 
 ## Project Overview
-Prism-Validator is a hybrid dataset validation tool for psychological experiments. It enforces a "PRISM" structure (BIDS-inspired but with nested metadata) while allowing standard BIDS as a fallback. It consists of a core Python validation library and a Flask-based web interface.
+Prism-Validator is a hybrid dataset validation tool for psychological experiments. It enforces a "PRISM" structure (BIDS-inspired, with additional metadata requirements) while remaining compatible with standard BIDS tools/apps. It consists of a core Python validation library and a Flask-based web interface.
 
 ## Architecture & Components
 - **Core Logic (`src/`)**:
@@ -20,7 +20,7 @@ Prism-Validator is a hybrid dataset validation tool for psychological experiment
 1.  **PRISM vs. BIDS**:
     - **PRISM**: Uses nested JSON keys (e.g., `Technical.SamplingRate`). Enforced by schemas in `schemas/`.
     - **BIDS**: Uses flat JSON keys (e.g., `SamplingFrequency`).
-    - **Fallback**: If PRISM validation fails, the system may check for BIDS compliance unless `--strict` mode is active.
+  - **BIDS validator (optional)**: The tool can run the standard BIDS validator in addition to PRISM validation.
 2.  **Modalities**:
     - `survey` (formerly `behavior`): `.tsv` files.
     - `eeg`: No specific PRISM schema (relies on BIDS standard).
@@ -40,7 +40,7 @@ Prism-Validator is a hybrid dataset validation tool for psychological experiment
 
 ## Developer Workflows
 - **Running Web UI**: `python prism-validator-web.py` (runs on port 5001).
-- **CLI Usage**: `python prism-validator.py /path/to/dataset --strict`.
+- **CLI Usage**: `python prism-validator.py /path/to/dataset`.
 - **Schema Updates**:
   - When renaming/adding modalities, update:
     1. `schemas/` filenames.
@@ -52,4 +52,4 @@ Prism-Validator is a hybrid dataset validation tool for psychological experiment
 ## Key Conventions
 - **Cross-Platform**: Always use `src.cross_platform` utilities for path handling.
 - **System Files**: Always filter `.DS_Store`, `Thumbs.db` using `system_files.filter_system_files`.
-- **Strict Mode**: Passed from UI/CLI to `runner.py` to disable BIDS fallback logic.
+

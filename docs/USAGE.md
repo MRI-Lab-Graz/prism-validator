@@ -55,8 +55,9 @@ python prism-validator.py /path/to/your/dataset
 | Flag | Description | Example |
 |------|-------------|---------|
 | `--schema-version` | Specify which schema version to use (default: `stable`). | `python prism-validator.py /data --schema-version v0.1` |
-| `--strict` | Disable BIDS fallback. Only allows PRISM-compliant files. | `python prism-validator.py /data --strict` |
 | `-v`, `--verbose` | Show detailed progress and file scanning info. | `python prism-validator.py /data -v` |
+| `--bids` | Run the standard BIDS validator in addition to PRISM validation. | `python prism-validator.py /data --bids` |
+| `--bids-warnings` | Show warnings from the BIDS validator (default: hidden). | `python prism-validator.py /data --bids --bids-warnings` |
 | `--list-versions` | Show all available schema versions. | `python prism-validator.py --list-versions` |
 
 ### Example Output

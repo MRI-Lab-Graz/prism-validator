@@ -8,6 +8,7 @@ import json
 import csv
 from datetime import datetime
 from jsonschema import validate, ValidationError
+from schema_manager import validate_schema_version
 from cross_platform import (
     normalize_path,
     safe_path_join,
@@ -502,6 +503,8 @@ class DatasetValidator:
             # Validate against schema if available
             schema = self.schemas.get(modality)
             if schema:
+                # Version compatibility checks (only warns when explicitly specified and incompatible)
+                issues.extend(validate_schema_version(sidecar_data, schema))
                 validate(instance=sidecar_data, schema=schema)
 
         except ValidationError as e:

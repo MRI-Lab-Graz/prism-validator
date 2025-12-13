@@ -9,7 +9,10 @@ import sys
 import subprocess
 import json
 
+from jsonschema import validate, ValidationError
+
 from schema_manager import load_all_schemas
+from schema_manager import validate_schema_version
 from validator import DatasetValidator, MODALITY_PATTERNS, resolve_sidecar_path
 from stats import DatasetStats
 from system_files import filter_system_files
@@ -51,6 +54,26 @@ def validate_dataset(root_dir, verbose=False, schema_version=None, run_bids=Fals
     dataset_desc_path = os.path.join(root_dir, "dataset_description.json")
     if not os.path.exists(dataset_desc_path):
         issues.append(("ERROR", "Missing dataset_description.json"))
+    else:
+        # Validate dataset_description.json against the dataset_description schema (if present)
+        try:
+            with open(dataset_desc_path, "r", encoding="utf-8") as f:
+                dataset_desc = json.load(f)
+
+            dataset_schema = schemas.get("dataset_description")
+            if dataset_schema:
+                issues.extend(validate_schema_version(dataset_desc, dataset_schema))
+                validate(instance=dataset_desc, schema=dataset_schema)
+        except json.JSONDecodeError as e:
+            issues.append(
+                ("ERROR", f"{dataset_desc_path} is not valid JSON: {e}")
+            )
+        except ValidationError as e:
+            issues.append(
+                ("ERROR", f"{dataset_desc_path} schema error: {e.message}")
+            )
+        except Exception as e:
+            issues.append(("ERROR", f"Error processing {dataset_desc_path}: {e}"))
 
     # Check and update .bidsignore for BIDS-App compatibility
     try:
@@ -328,6 +351,14 @@ def _validate_modality_dir(
 ):
     issues = []
 
+    def _effective_modality_for_file(dir_modality, filename):
+        # In standard BIDS, events live inside func/ as *_events.tsv.
+        # Prism extends events metadata requirements via the `events` schema.
+        lower = filename.lower()
+        if lower.endswith("_events.tsv") or lower.endswith("_events.tsv.gz"):
+            return "events"
+        return dir_modality
+
     all_files = os.listdir(modality_dir)
     filtered_files = filter_system_files(all_files)
 
@@ -354,8 +385,9 @@ def _validate_modality_dir(
 
             # Validate sidecar if not JSON file itself
             if not fname.endswith(".json"):
+                sidecar_modality = _effective_modality_for_file(modality, fname)
                 sidecar_issues = validator.validate_sidecar(
-                    file_path, modality, root_dir
+                    file_path, sidecar_modality, root_dir
                 )
                 issues.extend(sidecar_issues)
 
