@@ -124,6 +124,6 @@ After building:
 
 ## See Also
 
-- [General Installation Guide](docs/INSTALLATION.md)
-- [Windows Compatibility Notes](docs/WINDOWS_COMPATIBILITY.md)
-- [Windows Setup Guide](docs/WINDOWS_SETUP.md)
+- [General Installation Guide](INSTALLATION.md)
+- [Windows Compatibility Notes](WINDOWS_COMPATIBILITY.md)
+- [Windows Setup Guide](WINDOWS_SETUP.md)

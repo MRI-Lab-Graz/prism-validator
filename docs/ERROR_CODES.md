@@ -131,7 +131,7 @@ Check the schema requirements for your modality:
 - `Columns` (array of strings)
 
 **Resources:**
-- [Schema Documentation](./README.md#schema-validation)
+- [Schema Versioning Guide](SCHEMA_VERSIONING_GUIDE.md)
 - Check `schemas/` directory for complete requirements
 
 ---
@@ -151,7 +151,7 @@ Check the schema requirements for your modality:
 **How to Fix:**
 
 **Invalid JSON:**
-```json
+```text
 {
   "TaskName": 'faces',    # Single quotes - invalid!
   "Duration": 300,        # Trailing comma - invalid!
@@ -238,7 +238,7 @@ sub-01_task-faces_bold.mp4 in func/ directory
 
 If you're still stuck after reading this documentation:
 
-1. Check the [main README](./README.md) for general guidance
+1. Check [USAGE.md](USAGE.md) for general guidance
 2. Review example datasets in `docs/examples/`
 3. Open an issue on [GitHub](https://github.com/MRI-Lab-Graz/prism-validator/issues)
 4. Consult the [BIDS Specification](https://bids-specification.readthedocs.io/)

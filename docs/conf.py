@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Prism-Validator"
 copyright = "2025, MRI-Lab-Graz"
 author = "MRI-Lab-Graz"
-release = "1.0.0"
+release = "1.3.0"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
@@ -19,7 +19,13 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "README.md"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "README.md",
+    "archive/**",
+]
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = "sphinx_rtd_theme"

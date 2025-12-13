@@ -2,8 +2,12 @@
 
 This folder centralizes project documentation to keep the repo root clean.
 
-- FAIR implementation: see `FAIR_IMPLEMENTATION.md`
-- FAIR policy: see `FAIR_POLICY.md`
-- Proposed modalities: see `PROPOSED_MODALITIES.md`
-- Schema versioning: see `SCHEMA_VERSIONING.md`
-- Examples: see `examples/`
+- Start page / Table of contents: `index.rst`
+- Installation: `INSTALLATION.md`
+- Usage: `USAGE.md`
+- Prism tools: `PRISM_TOOLS.rst`
+- Schema versioning: `SCHEMA_VERSIONING_GUIDE.md`
+- FAIR policy: `FAIR_POLICY.md`
+- Examples: `examples/`
+
+Historical / working notes live under `archive/`.

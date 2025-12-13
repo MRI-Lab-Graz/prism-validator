@@ -114,13 +114,13 @@ git push origin v1.0.0
    ```
 
    ## 📚 Documentation
-   - [Quick Start Guide](docs/QUICK_START.md)
-   - [Schema Versioning Guide](docs/SCHEMA_VERSIONING_GUIDE.md)
+   - [Quick Start Guide](QUICK_START.md)
+   - [Schema Versioning Guide](SCHEMA_VERSIONING_GUIDE.md)
    - [Full Changelog](CHANGELOG.md)
 
    ## 🔗 Links
    - [Full Release Notes](RELEASE_NOTES_v1.0.0.md)
-   - [Documentation](docs/)
+   - [Documentation](index.rst)
 
    **Version**: 1.0.0  
    **Release Date**: October 9, 2025  

@@ -3,6 +3,26 @@ Prism Tools (CLI)
 
 Prism-Validator includes a command-line utility `prism_tools.py` for advanced data conversion tasks, particularly for physiological data ingestion.
 
+Requirements
+------------
+
+`prism_tools.py` enforces the same strict environment rule as the validator: it must be run from the repository's local virtual environment at ``./.venv``.
+
+Install dependencies via the setup script (recommended):
+
+.. code-block:: bash
+
+  # macOS / Linux
+  bash scripts/setup/setup.sh
+  source .venv/bin/activate
+
+On Windows:
+
+.. code-block:: bat
+
+  scripts\setup\setup-windows.bat
+  .venv\Scripts\activate
+
 Physiological Data Conversion
 -----------------------------
 

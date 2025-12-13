@@ -102,8 +102,8 @@ For existing users:
 
 ### Links
 - [GitHub Repository](https://github.com/MRI-Lab-Graz/prism-validator)
-- [Documentation](docs/)
-- [Schema Versioning Guide](docs/SCHEMA_VERSIONING_GUIDE.md)
+- [Documentation](https://github.com/MRI-Lab-Graz/prism-validator/tree/main/docs)
+- [Schema Versioning Guide](https://github.com/MRI-Lab-Graz/prism-validator/blob/main/docs/SCHEMA_VERSIONING_GUIDE.md)
 
 ---
 

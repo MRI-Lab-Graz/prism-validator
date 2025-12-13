@@ -106,7 +106,7 @@ If you need logic (e.g., "Show Q3 only if Q2=Yes"), you have two options:
 **Option B: Define in JSON (Reverse Engineering)**
 If you are generating the survey from JSON, you can add a `Relevance` key to your question object. The script will map this to the LimeSurvey relevance equation.
 
-```json
+```text
 "Q03": {
   "Description": "Why did you say yes?",
   "Levels": { ... },
@@ -122,7 +122,7 @@ If you are generating the survey from JSON, you can add a `Relevance` key to you
 4.  Run: `python helpers/surveys/limesurvey_to_prism.py ads.lss task-ads_beh.json`.
 5.  The generated JSON will look like:
 
-```json
+```text
 {
   "Q01": {
     "Description": "I felt depressed.",

@@ -86,7 +86,7 @@ If you need to migrate datasets validated with an older schema version:
 
 Validation reports (JSON and web interface) include the schema version used:
 
-```json
+```text
 {
   "schema_version": "stable",
   "validation_timestamp": "2025-10-09T...",

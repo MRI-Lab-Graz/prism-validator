@@ -8,7 +8,7 @@ This guide covers Windows-specific setup and usage for the prism-validator.
 1. Download Python 3.8+ from [python.org](https://www.python.org/downloads/)
 2. **Important**: Check "Add Python to PATH" during installation
 3. Verify installation:
-   ```cmd
+   ```bat
    python --version
    ```
 
@@ -21,22 +21,22 @@ Install [Git for Windows](https://git-scm.com/download/win) if you want to clone
 1. Open Command Prompt or PowerShell
 2. Navigate to the prism-validator directory
 3. Run the setup script:
-   ```cmd
+   ```bat
    scripts\setup-windows.bat
    ```
 
 ### Method 2: Manual Setup
 1. Open Command Prompt in the project directory
 2. Create virtual environment:
-   ```cmd
+   ```bat
    python -m venv .venv
    ```
 3. Activate virtual environment:
-   ```cmd
+   ```bat
    .venv\Scripts\activate
    ```
 4. Install dependencies:
-   ```cmd
+   ```bat
    pip install -r requirements.txt
    ```
 
@@ -44,12 +44,12 @@ Install [Git for Windows](https://git-scm.com/download/win) if you want to clone
 
 ### Activating the Environment
 Always activate the virtual environment before using the validator:
-```cmd
+```bat
 .venv\Scripts\activate
 ```
 
 ### Basic Validation
-```cmd
+```bat
 python prism-validator.py "C:\path\to\your\dataset"
 ```
 
@@ -59,7 +59,7 @@ python prism-validator.py "C:\path\to\your\dataset"
 - UNC paths are supported: `\\server\share\dataset`
 
 ### Example Commands
-```cmd
+```bat
 # Validate a local dataset
 python prism-validator.py "C:\Users\username\Documents\my_dataset"
 
@@ -111,7 +111,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ## Testing Windows Compatibility
 
 Run the Windows compatibility test:
-```cmd
+```bat
 python tests\test_windows_compatibility.py
 ```
 
@@ -165,7 +165,7 @@ For better performance, consider excluding the project directory from Windows De
 
 ### Virtual Environment Issues
 If you encounter virtual environment issues:
-```cmd
+```bat
 # Remove existing environment
 rmdir /s .venv
 
@@ -177,7 +177,7 @@ pip install -r requirements.txt
 
 ### Package Installation Issues
 If pip installations fail:
-```cmd
+```bat
 # Upgrade pip
 python -m pip install --upgrade pip
 
@@ -187,7 +187,7 @@ pip install --index-url https://pypi.org/simple/ -r requirements.txt
 
 ### Network/Proxy Issues
 If you're behind a corporate firewall:
-```cmd
+```bat
 # Set proxy (replace with your proxy details)
 pip install --proxy https://user:password@proxy.server:port -r requirements.txt
 ```
@@ -195,7 +195,7 @@ pip install --proxy https://user:password@proxy.server:port -r requirements.txt
 ## Building for Distribution
 
 To create a standalone Windows executable:
-```cmd
+```bat
 # Install PyInstaller
 pip install pyinstaller
 

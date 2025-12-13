@@ -24,7 +24,7 @@ bash scripts/setup/setup.sh
 
 Open Command Prompt or PowerShell and run:
 
-```cmd
+```bat
 git clone https://github.com/MRI-Lab-Graz/prism-validator.git
 cd prism-validator
 scripts\setup\setup-windows.bat
@@ -34,6 +34,8 @@ This will:
 1.  Create a Python virtual environment (`.venv`).
 2.  Install all necessary dependencies.
 3.  Prepare the application for use.
+
+Note: The CLI tools (`prism-validator.py`, `prism_tools.py`) intentionally enforce running from the repository-local virtual environment at `./.venv`.
 
 ## Manual Installation
 
